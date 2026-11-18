@@ -34,11 +34,13 @@
     <p>Cada imagen, un latido guardado</p>
   </header>
 
+<div id="together" style="display:none;"></div>
 <div id="counter">Recuerdos guardados: <b id="countNum">0</b></div>
   <div id="demoBanner" class="demo-banner" style="display:none;">
     Modo demo: configura tu Supabase para guardar las fotos de forma permanente (ver instrucciones en el código).
   </div>
 
+  <div id="yearFilter"></div>
   <div id="board"></div>
 </div>
 
@@ -57,14 +59,24 @@
 
 <!-- MODAL VER FOTO -->
 <div class="modal-overlay" id="viewModal">
+  <button class="nav prev" onclick="navView(-1)" aria-label="Anterior">‹</button>
+  <button class="nav next" onclick="navView(1)" aria-label="Siguiente">›</button>
   <div class="modal">
     <button class="modal-close" onclick="closeModal('viewModal')">✕</button>
     <img id="viewImg" src="" alt="Recuerdo">
-    <h3 id="viewCap"></h3>
-    <div class="date" id="viewDate"></div>
-    <div class="actions" style="justify-content:center; margin-top:14px;">
-      <button class="btn ghost" onclick="deleteCurrentMemory()">🗑 Eliminar recuerdo</button>
+    <div id="viewInfo">
+      <h3 id="viewCap"></h3>
+      <div class="date" id="viewDate"></div>
     </div>
+    <div id="editBox" style="display:none;">
+      <div class="field"><label>Frase o dedicatoria</label><input type="text" id="editCaption"></div>
+      <div class="field"><label>Fecha</label><input type="date" id="editDate"></div>
+    </div>
+    <div class="actions" style="justify-content:center; margin-top:14px;">
+      <button class="btn ghost" id="editBtn" onclick="editOrSave()">✏️ Editar</button>
+      <button class="btn ghost" onclick="deleteCurrentMemory()">🗑 Eliminar</button>
+    </div>
+    <div class="view-pos" id="viewPos"></div>
   </div>
 </div>
 
@@ -88,7 +100,7 @@
     <div id="uploadStatus"></div>
     <div class="actions">
       <button class="btn ghost" onclick="closeModal('uploadModal')">Cancelar</button>
-      <button class="btn" onclick="handleUpload()">Guardar 💗</button>
+      <button class="btn" id="saveBtn" onclick="handleUpload()">Guardar 💗</button>
     </div>
   </div>
 </div>
