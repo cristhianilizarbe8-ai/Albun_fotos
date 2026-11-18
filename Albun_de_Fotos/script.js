@@ -14,6 +14,7 @@ const SUPABASE_URL = 'https://yqococzxsvspdftprbjf.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_f_WY2nH12qcyB07k87hbzg_OyplgPGI';
 const BUCKET = 'fotos-recuerdos';
 const TABLE = 'recuerdos';
+const START_DATE = ''; // <-- fecha en que empezaron, formato 'AAAA-MM-DD' (ej: '2023-02-14'). Vacío = no se muestra
 const LOCK_PASSWORD = '12345'; // <-- cambia esto por su clave secreta
 const DEFAULT_MUSIC = 'musica/nuestra-cancion.mp3'; // <-- tu canción, ya guardada en la carpeta musica
 
@@ -27,17 +28,21 @@ const rotations = [-6,-3,-1,2,4,6,-4,1,-2,5];
 const tapeLeft  = ['8px','auto','14px','auto','20px'];
 
 /* ---------- Lock screen ---------- */
+function openApp(){
+  document.getElementById('lockScreen').classList.add('opened');
+  document.getElementById('app').style.display = 'block';
+  const fab = document.getElementById('fab');
+  fab.style.display = 'flex'; fab.style.alignItems='center'; fab.style.justifyContent='center';
+  document.getElementById('musicBar').style.display='flex';
+  startDefaultMusic();
+  renderTogether();
+  loadMemories();
+}
 function tryUnlock(){
   const val = document.getElementById('lockInput').value.trim().toLowerCase();
   if (val === LOCK_PASSWORD.toLowerCase()) {
-    document.getElementById('lockScreen').classList.add('opened');
-    document.getElementById('app').style.display = 'block';
-    document.getElementById('fab').style.display = 'flex';
-    document.getElementById('fab').style.alignItems='center';
-    document.getElementById('fab').style.justifyContent='center';
-    document.getElementById('musicBar').style.display='flex';
-    startDefaultMusic();
-    loadMemories();
+    try{ sessionStorage.setItem('unlocked','1'); }catch(e){}
+    openApp();
   } else {
     document.getElementById('lockError').textContent = 'Clave incorrecta, inténtalo de nuevo mi amor 💕';
   }
@@ -59,32 +64,82 @@ function spawnHeart(){
 }
 setInterval(spawnHeart, 900);
 
+/* ---------- Contador de días juntos ---------- */
+function renderTogether(){
+  const el = document.getElementById('together');
+  if (!START_DATE) return;
+  const start = new Date(START_DATE + 'T00:00:00');
+  if (isNaN(start)) return;
+  const now = new Date();
+  const days = Math.floor((now - start) / 86400000);
+  if (days < 0) return;
+  let y = now.getFullYear() - start.getFullYear();
+  let m = now.getMonth() - start.getMonth();
+  let d = now.getDate() - start.getDate();
+  if (d < 0){ m--; d += new Date(now.getFullYear(), now.getMonth(), 0).getDate(); }
+  if (m < 0){ y--; m += 12; }
+  const parts = [];
+  if (y) parts.push(`${y} ${y===1?'año':'años'}`);
+  if (m) parts.push(`${m} ${m===1?'mes':'meses'}`);
+  parts.push(`${d} ${d===1?'día':'días'}`);
+  el.innerHTML = `<span class="script">Llevamos juntos</span> <b>${parts.join(', ')}</b> 💞<small>${days.toLocaleString('es-PE')} días en total</small>`;
+  el.style.display = 'block';
+}
+
 /* ---------- Datos: memorias ---------- */
-let memories = [];
+let memories = [];   // todas, ordenadas
+let shown = [];      // las que se ven (según filtro de año)
+let activeYear = null;
+
+const memKey = m => m.fecha || (m.created_at || '').slice(0,10);
 
 async function loadMemories(){
+  const board = document.getElementById('board');
+  if (!memories.length) board.innerHTML = '<div class="empty-state"><span class="script">Cargando recuerdos…</span></div>';
   if (sb){
     const { data, error } = await sb.from(TABLE).select('*').order('created_at', {ascending:false});
-    if (error){ console.error(error); memories = []; }
-    else { memories = data || []; }
+    if (error){
+      console.error(error);
+      board.innerHTML = '<div class="empty-state"><span class="script">No se pudieron cargar</span>Revisa tu conexión o la configuración de Supabase.</div>';
+      return;
+    }
+    memories = data || [];
   } else {
     document.getElementById('demoBanner').style.display='block';
     memories = JSON.parse(localStorage.getItem('demo_memories') || '[]');
   }
+  // más reciente primero según la fecha del recuerdo (o la de subida si no tiene)
+  memories.sort((a,b)=> memKey(b).localeCompare(memKey(a)) || (b.created_at||'').localeCompare(a.created_at||''));
+  renderYears();
   renderBoard();
+}
+
+function renderYears(){
+  const box = document.getElementById('yearFilter');
+  const years = [...new Set(memories.map(m => memKey(m).slice(0,4)).filter(Boolean))];
+  if (activeYear && !years.includes(activeYear)) activeYear = null;
+  if (years.length < 2){ box.innerHTML=''; return; }
+  box.innerHTML = [`<button class="chip ${!activeYear?'on':''}" onclick="setYear(null)">Todos</button>`]
+    .concat(years.map(y=>`<button class="chip ${activeYear===y?'on':''}" onclick="setYear('${y}')">${y}</button>`)).join('');
+}
+function setYear(y){ activeYear = y; renderYears(); renderBoard(); }
+
+function fmtFecha(f){
+  return f ? new Date(f+'T00:00:00').toLocaleDateString('es-PE', {day:'numeric', month:'long', year:'numeric'}) : '';
 }
 
 function renderBoard(){
   const board = document.getElementById('board');
+  shown = activeYear ? memories.filter(m => memKey(m).startsWith(activeYear)) : memories;
   document.getElementById('countNum').textContent = memories.length;
   if (memories.length === 0){
-    board.innerHTML = `<div class="empty-state"><span class="script">Aún no hay recuerdos aquí</span>Toca el botón 💗 para subir su primera foto</div>`;
+    board.innerHTML = `<div class="empty-state"><span class="script">Aún no hay recuerdos aquí</span>Toca el botón ＋ para subir su primera foto</div>`;
     return;
   }
-  board.innerHTML = memories.map((m,i)=>{
+  board.innerHTML = shown.map((m,i)=>{
     const rot = rotations[i % rotations.length];
     const tapeSide = (i % 2 === 0) ? 'left:14px;' : 'right:14px;';
-    const fecha = m.fecha ? new Date(m.fecha+'T00:00:00').toLocaleDateString('es-PE', {day:'numeric', month:'long', year:'numeric'}) : '';
+    const fecha = fmtFecha(m.fecha);
     return `
       <div class="polaroid" style="transform:rotate(${rot}deg);" onclick='openView(${i})'>
         <div class="tape" style="${tapeSide}"></div>
@@ -98,19 +153,60 @@ function renderBoard(){
 function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 let currentViewIndex = null;
+let isEditing = false;
 
 function openView(i){
   currentViewIndex = i;
-  const m = memories[i];
+  const m = shown[i];
+  setEditing(false);
   document.getElementById('viewImg').src = m.url;
   document.getElementById('viewCap').textContent = m.caption || '';
-  document.getElementById('viewDate').textContent = m.fecha ? new Date(m.fecha+'T00:00:00').toLocaleDateString('es-PE',{day:'numeric',month:'long',year:'numeric'}) : '';
+  document.getElementById('viewDate').textContent = fmtFecha(m.fecha);
+  document.getElementById('viewPos').textContent = `${i+1} / ${shown.length}`;
   showModal('viewModal');
+}
+function navView(step){
+  if (currentViewIndex === null || shown.length < 2 || isEditing) return;
+  openView((currentViewIndex + step + shown.length) % shown.length);
+}
+
+function setEditing(on){
+  isEditing = on;
+  document.getElementById('viewInfo').style.display = on ? 'none' : 'block';
+  document.getElementById('editBox').style.display = on ? 'block' : 'none';
+  document.getElementById('editBtn').textContent = on ? '💾 Guardar' : '✏️ Editar';
+}
+async function editOrSave(){
+  if (currentViewIndex === null) return;
+  const m = shown[currentViewIndex];
+  if (!isEditing){
+    document.getElementById('editCaption').value = m.caption || '';
+    document.getElementById('editDate').value = m.fecha || '';
+    setEditing(true);
+    return;
+  }
+  const caption = document.getElementById('editCaption').value.trim();
+  const fecha = document.getElementById('editDate').value || null;
+  try{
+    if (sb){
+      const { error } = await sb.from(TABLE).update({ caption, fecha }).eq('id', m.id);
+      if (error) throw error;
+    } else {
+      m.caption = caption; m.fecha = fecha;
+      localStorage.setItem('demo_memories', JSON.stringify(memories));
+    }
+    await loadMemories();
+    const idx = shown.findIndex(x => x.id === m.id && (m.id || x === m));
+    if (idx >= 0) openView(idx); else closeModal('viewModal');
+  } catch(err){
+    console.error(err);
+    alert('No se pudo guardar: ' + (err.message || JSON.stringify(err)));
+  }
 }
 
 async function deleteCurrentMemory(){
   if (currentViewIndex === null) return;
-  const m = memories[currentViewIndex];
+  const m = shown[currentViewIndex];
   if (!confirm('¿Seguro que quieres eliminar este recuerdo? No se puede deshacer 💔')) return;
 
   try{
@@ -127,7 +223,7 @@ async function deleteCurrentMemory(){
         if (delRowErr) throw delRowErr;
       }
     } else {
-      memories.splice(currentViewIndex, 1);
+      memories.splice(memories.indexOf(m), 1);
       localStorage.setItem('demo_memories', JSON.stringify(memories));
     }
     closeModal('viewModal');
@@ -151,9 +247,11 @@ async function handleUpload(){
 
   if (!files || files.length === 0){ status.textContent='Elige al menos una foto.'; return; }
   const toUpload = Array.from(files);
+  const saveBtn = document.getElementById('saveBtn');
+  saveBtn.disabled = true;
   status.textContent = `Subiendo 0/${toUpload.length}...`;
 
-  let done = 0;
+  let done = 0, failed = false;
   for (const file of toUpload){
     try{
       if (sb){
@@ -173,12 +271,15 @@ async function handleUpload(){
       status.textContent = `Subiendo ${done}/${toUpload.length}...`;
     } catch(err){
       console.error(err);
-      status.textContent = `Ocurrió un error subiendo "${file.name}". Revisa tu configuración de Supabase.`;
+      status.textContent = `Error subiendo "${file.name}" (${err.message || 'revisa Supabase'}). Se guardaron ${done}.`;
+      failed = true;
       break;
     }
   }
-  status.textContent = `¡Listo! ${done} foto(s) guardadas 💗`;
+  saveBtn.disabled = false;
   await loadMemories();
+  if (failed) return;
+  status.textContent = `¡Listo! ${done} foto(s) guardadas 💗`;
   setTimeout(()=>{ closeModal('uploadModal'); document.getElementById('fileInput').value=''; document.getElementById('captionInput').value=''; document.getElementById('dateInput').value=''; status.textContent=''; }, 900);
 }
 
@@ -215,6 +316,23 @@ function showModal(id){ document.getElementById(id).classList.add('show'); }
 function closeModal(id){ document.getElementById(id).classList.remove('show'); }
 document.querySelectorAll('.modal-overlay').forEach(ov=>{
   ov.addEventListener('click', e=>{ if(e.target === ov) ov.classList.remove('show'); });
+});
+
+/* ---------- Teclado y deslizar ---------- */
+document.addEventListener('keydown', e=>{
+  const view = document.getElementById('viewModal');
+  if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.show').forEach(o=>o.classList.remove('show'));
+  if (view.classList.contains('show') && !isEditing){
+    if (e.key === 'ArrowLeft') navView(-1);
+    if (e.key === 'ArrowRight') navView(1);
+  }
+});
+let touchX = null;
+document.getElementById('viewModal').addEventListener('touchstart', e=>{ touchX = e.changedTouches[0].clientX; }, {passive:true});
+document.getElementById('viewModal').addEventListener('touchend', e=>{
+  if (touchX === null) return;
+  const dx = e.changedTouches[0].clientX - touchX; touchX = null;
+  if (Math.abs(dx) > 50) navView(dx < 0 ? 1 : -1);
 });
 
 /* ---------- Música ---------- */
@@ -255,3 +373,6 @@ function toggleMusic(){
     document.getElementById('eq').classList.add('paused');
   }
 }
+
+/* ---------- Mantener desbloqueado mientras la pestaña siga abierta ---------- */
+try{ if (sessionStorage.getItem('unlocked') === '1') openApp(); }catch(e){}
