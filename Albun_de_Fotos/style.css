@@ -1,0 +1,183 @@
+  /* ============================================================
+     CONFIGURA AQUÍ TU SUPABASE — ver instrucciones al final del chat
+     ============================================================ */
+  :root{
+    --paper:#FBF3E7;
+    --paper-2:#F3E7D3;
+    --rose:#E8B4B8;
+    --rose-deep:#C97B84;
+    --plum:#4A2C3D;
+    --ink:#6B4C57;
+    --gold:#D4A574;
+    --white:#FFFDF8;
+    --shadow: 0 10px 30px rgba(74,44,61,0.18);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    font-family:'Lora', serif;
+    background:
+      radial-gradient(circle at 20% 10%, rgba(232,180,184,0.25), transparent 40%),
+      radial-gradient(circle at 85% 85%, rgba(212,165,116,0.2), transparent 45%),
+      var(--paper);
+    color:var(--plum);
+    min-height:100vh;
+    overflow-x:hidden;
+    position:relative;
+  }
+  /* textura de papel sutil */
+  body::before{
+    content:"";
+    position:fixed; inset:0; pointer-events:none; z-index:0;
+    background-image: radial-gradient(rgba(74,44,61,0.035) 1px, transparent 1px);
+    background-size: 4px 4px;
+    opacity:.5;
+  }
+
+  h1,h2,h3, .script{ font-family:'Caveat', cursive; }
+
+  /* ---------- Corazones flotantes ambientales ---------- */
+  #heartsField{position:fixed; inset:0; pointer-events:none; z-index:1; overflow:hidden;}
+  .floating-heart{
+    position:absolute; bottom:-40px; font-size:20px; color:var(--rose-deep);
+    opacity:.55; animation: floatUp linear forwards;
+    filter: drop-shadow(0 2px 3px rgba(74,44,61,.15));
+  }
+  @keyframes floatUp{
+    0%{ transform:translateY(0) translateX(0) rotate(0deg); opacity:0;}
+    10%{opacity:.6;}
+    100%{ transform:translateY(-110vh) translateX(var(--drift,20px)) rotate(25deg); opacity:0;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .floating-heart{ animation:none; display:none; }
+  }
+
+  /* ---------- Pantalla de bloqueo ---------- */
+  #lockScreen{
+    position:fixed; inset:0; z-index:20; display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(160deg, var(--rose) 0%, var(--rose-deep) 100%);
+    transition: transform .7s cubic-bezier(.7,0,.3,1), opacity .6s ease;
+  }
+  #lockScreen.opened{ transform:translateY(-100%); opacity:0; pointer-events:none; }
+  .lock-card{
+    background:var(--white); width:min(90vw,340px); border-radius:22px;
+    padding:38px 28px 32px; text-align:center; box-shadow:var(--shadow);
+    border:1px solid rgba(255,255,255,.6);
+    position:relative;
+  }
+  .lock-tape{
+    position:absolute; top:-14px; left:50%; transform:translateX(-50%) rotate(-3deg);
+    width:90px; height:26px; background:rgba(212,165,116,.55);
+    border:1px solid rgba(212,165,116,.7);
+  }
+  .lock-heart{ font-size:52px; margin-bottom:6px; }
+  .lock-card h1{ font-size:2.1rem; margin:0 0 4px; color:var(--plum); }
+  .lock-card p.sub{ margin:0 0 22px; color:var(--ink); font-size:.95rem;}
+  #lockInput{
+    width:100%; padding:12px 14px; border-radius:14px; border:2px solid var(--rose);
+    text-align:center; font-family:'Lora',serif; font-size:1rem; outline:none; margin-bottom:14px;
+    background:var(--paper);
+  }
+  #lockInput:focus{ border-color:var(--rose-deep); }
+  .btn{
+    display:inline-block; border:none; cursor:pointer; border-radius:999px;
+    padding:12px 26px; font-family:'Lora',serif; font-weight:600; font-size:.95rem;
+    background:var(--plum); color:var(--white); transition:transform .15s ease, box-shadow .15s ease;
+    box-shadow:0 6px 16px rgba(74,44,61,.25);
+  }
+  .btn:hover{ transform:translateY(-2px); }
+  .btn:active{ transform:translateY(0); }
+  .btn.ghost{ background:transparent; color:var(--rose-deep); border:2px solid var(--rose-deep); box-shadow:none; }
+  #lockError{ color:#a23c4d; font-size:.85rem; height:16px; margin-bottom:4px; }
+
+  /* ---------- App principal ---------- */
+  #app{ position:relative; z-index:2; max-width:900px; margin:0 auto; padding:28px 18px 120px; }
+  header.hero{ text-align:center; margin-bottom:26px; }
+  header.hero .eyebrow{
+    display:inline-block; font-size:.75rem; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--rose-deep); background:rgba(232,180,184,.25); border-radius:999px; padding:5px 14px; margin-bottom:10px;
+  }
+  header.hero h1{ font-size:3rem; margin:0; color:var(--plum); line-height:1; }
+  header.hero p{ color:var(--ink); margin:8px 0 0; font-style:italic; }
+  #counter{ text-align:center; font-size:.85rem; color:var(--ink); margin-bottom:18px; }
+  #counter b{ color:var(--rose-deep); }
+
+  /* ---------- Corcho / scrapbook grid ---------- */
+  #board{
+    background: var(--paper-2);
+    border-radius:24px;
+    padding:26px 18px 34px;
+    box-shadow: inset 0 0 0 1px rgba(74,44,61,.06), var(--shadow);
+    column-count:2; column-gap:18px;
+  }
+  @media(min-width:640px){ #board{ column-count:3; } }
+  @media(min-width:900px){ #board{ column-count:4; } }
+
+  .polaroid{
+    break-inside:avoid; margin:0 0 20px; background:var(--white); padding:10px 10px 16px;
+    border-radius:4px; box-shadow:0 8px 18px rgba(74,44,61,.16);
+    position:relative; cursor:pointer; transition: transform .25s ease, box-shadow .25s ease;
+  }
+  .polaroid:hover{ transform: translateY(-4px) rotate(0deg) !important; box-shadow:0 16px 28px rgba(74,44,61,.24); z-index:5; }
+  .polaroid img{ width:100%; display:block; border-radius:2px; background:var(--paper-2); aspect-ratio:1/1; object-fit:cover; }
+  .polaroid .cap{ font-family:'Caveat',cursive; font-size:1.25rem; text-align:center; color:var(--plum); margin-top:8px; line-height:1.1; }
+  .polaroid .date{ text-align:center; font-size:.68rem; color:var(--ink); opacity:.7; margin-top:2px;}
+  .tape{
+    position:absolute; top:-10px; width:60px; height:22px;
+    background:rgba(212,165,116,.6); border:1px solid rgba(212,165,116,.75);
+    box-shadow:0 2px 4px rgba(0,0,0,.08);
+  }
+
+  .empty-state{
+    grid-column:1/-1; text-align:center; padding:40px 10px; color:var(--ink);
+  }
+  .empty-state .script{ font-size:2rem; color:var(--rose-deep); display:block; margin-bottom:6px;}
+
+  /* ---------- Botón flotante + reproductor ---------- */
+  #fab{
+    position:fixed; right:20px; bottom:88px; z-index:15;
+    width:56px; height:56px; border-radius:50%; background:var(--rose-deep); color:white;
+    border:none; font-size:26px; box-shadow:0 8px 20px rgba(201,123,132,.5); cursor:pointer;
+  }
+  #musicBar{
+    position:fixed; left:0; right:0; bottom:0; z-index:15;
+    background:var(--white); border-top:1px solid rgba(74,44,61,.08);
+    display:flex; align-items:center; gap:12px; padding:10px 16px;
+    box-shadow:0 -6px 18px rgba(74,44,61,.08);
+  }
+  #musicBar .title{ font-size:.8rem; color:var(--ink); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  #playToggle{
+    width:38px; height:38px; border-radius:50%; border:none; background:var(--plum); color:white; cursor:pointer; font-size:14px;
+  }
+  #eq{ display:flex; gap:2px; align-items:flex-end; height:16px; }
+  #eq span{ width:3px; background:var(--rose-deep); animation:bounce 1s infinite ease-in-out; }
+  #eq span:nth-child(2){ animation-delay:.15s; } #eq span:nth-child(3){ animation-delay:.3s; }
+  @keyframes bounce{ 0%,100%{height:4px;} 50%{height:16px;} }
+  #eq.paused span{ animation-play-state:paused; height:4px; }
+  #musicFile{ font-size:.7rem; color:var(--ink); }
+
+  /* ---------- Modales ---------- */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(74,44,61,.55); backdrop-filter:blur(2px);
+    display:flex; align-items:center; justify-content:center; z-index:30; padding:20px;
+    opacity:0; pointer-events:none; transition:opacity .25s ease;
+  }
+  .modal-overlay.show{ opacity:1; pointer-events:auto; }
+  .modal{ background:var(--white); border-radius:20px; max-width:420px; width:100%; padding:24px; box-shadow:var(--shadow); max-height:88vh; overflow-y:auto; position:relative;}
+  .modal img{ width:100%; border-radius:10px; margin-bottom:10px; }
+  .modal h3{ margin:0 0 4px; font-size:1.7rem; color:var(--plum); }
+  .modal .date{ color:var(--ink); font-size:.8rem; margin-bottom:10px; }
+  .modal-close{ position:absolute; top:14px; right:16px; background:none; border:none; font-size:22px; color:var(--ink); cursor:pointer; }
+
+  .field{ margin-bottom:14px; text-align:left; }
+  .field label{ display:block; font-size:.8rem; color:var(--ink); margin-bottom:5px; }
+  .field input[type=text], .field input[type=date]{
+    width:100%; padding:10px 12px; border-radius:10px; border:1.5px solid var(--rose); font-family:'Lora',serif;
+  }
+  .field input[type=file]{ width:100%; }
+  #uploadStatus{ font-size:.8rem; color:var(--rose-deep); min-height:18px; margin-top:6px; }
+  .actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:6px; }
+  .demo-banner{
+    background:rgba(212,165,116,.25); border:1px dashed var(--gold); color:var(--ink);
+    font-size:.75rem; padding:8px 12px; border-radius:12px; text-align:center; margin-bottom:16px;
+  }

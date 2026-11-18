@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nuestra Historia de Amor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="heartsField"></div>
+
+<!-- LOCK SCREEN -->
+<div id="lockScreen">
+  <div class="lock-card">
+    <div class="lock-tape"></div>
+    <div class="lock-heart">🐻💌</div>
+    <h1>Nuestra Historia de Amor</h1>
+    <p class="sub">Un diario de recuerdos, solo para nosotros</p>
+    <input id="lockInput" type="password" placeholder="Nuestra clave" />
+    <div id="lockError"></div>
+    <button class="btn" onclick="tryUnlock()">Abrir Corazón 💗</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none;">
+  <header class="hero">
+    <span class="eyebrow">Diario de recuerdos</span>
+    <h1>Nuestras Fotos</h1>
+    <p>Cada imagen, un latido guardado</p>
+  </header>
+
+<div id="counter">Recuerdos guardados: <b id="countNum">0</b></div>
+  <div id="demoBanner" class="demo-banner" style="display:none;">
+    Modo demo: configura tu Supabase para guardar las fotos de forma permanente (ver instrucciones en el código).
+  </div>
+
+  <div id="board"></div>
+</div>
+
+<button id="fab" title="Agregar recuerdo" onclick="openUpload()" style="display:none;">＋</button>
+
+<div id="musicBar" style="display:none;">
+  <button id="playToggle" onclick="toggleMusic()">▶</button>
+  <div id="eq" class="paused"><span></span><span></span><span></span></div>
+  <div class="title" id="musicTitle">Sin música cargada</div>
+  <label class="musicFile" style="cursor:pointer; font-size:.75rem; color:var(--rose-deep);">
+    Cambiar canción
+    <input type="file" id="musicFile" accept="audio/*" style="display:none;" onchange="loadMusic(event)">
+  </label>
+  <audio id="audioPlayer" loop></audio>
+</div>
+
+<!-- MODAL VER FOTO -->
+<div class="modal-overlay" id="viewModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('viewModal')">✕</button>
+    <img id="viewImg" src="" alt="Recuerdo">
+    <h3 id="viewCap"></h3>
+    <div class="date" id="viewDate"></div>
+    <div class="actions" style="justify-content:center; margin-top:14px;">
+      <button class="btn ghost" onclick="deleteCurrentMemory()">🗑 Eliminar recuerdo</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SUBIR FOTOS -->
+<div class="modal-overlay" id="uploadModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('uploadModal')">✕</button>
+    <h3>Nuevo recuerdo</h3>
+    <div class="field">
+      <label>Fotos (puedes elegir varias a la vez)</label>
+      <input type="file" id="fileInput" accept="image/*" multiple>
+    </div>
+    <div class="field">
+      <label>Frase o dedicatoria (opcional, aplica a todas si subes varias)</label>
+      <input type="text" id="captionInput" placeholder="Ej: El día que fuimos a la playa">
+    </div>
+    <div class="field">
+      <label>Fecha (opcional)</label>
+      <input type="date" id="dateInput">
+    </div>
+    <div id="uploadStatus"></div>
+    <div class="actions">
+      <button class="btn ghost" onclick="closeModal('uploadModal')">Cancelar</button>
+      <button class="btn" onclick="handleUpload()">Guardar 💗</button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
